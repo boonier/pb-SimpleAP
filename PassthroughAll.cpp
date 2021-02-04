@@ -21,7 +21,7 @@ BidulePlugin(host){
 	_numMagIns=1;
 	_numMagOuts=1;
 
-	_numParams=4;
+	_numParams=5;
     _numUIColumns=3;
 
 	_dParamValue = 0.0;
@@ -29,6 +29,7 @@ BidulePlugin(host){
 	_dumbAFCounter = 0;
     _counterRate = 1;
     _interpolate = 0;
+    _interpolateType = 0;
 }
 
 PassthroughAll::~PassthroughAll(){
@@ -118,10 +119,23 @@ PassthroughAll::getParametersInfos(ParameterInfo* pinfos) {
     pinfos[3].linkable = 1;
     pinfos[3].saveable = 0;
     
+    pinfos[4].id = 4;
+    strcpy(pinfos[4].name, "type");
+    pinfos[4].type = INTPARAM;
+    pinfos[4].ctrlType = GUICTRL_CHOICE;
+    pinfos[4].linkable = 1;
+    pinfos[4].saveable = 1;
+    pinfos[4].paramInfo.pi.defaultValue = 0;
+    pinfos[4].paramInfo.pi.numChoices = 2;
+    
 }
 
 void 
 PassthroughAll::getParameterChoices(long id, std::vector<std::string>& vec) {
+    if(id == 4) {
+       vec.push_back("linear");
+       vec.push_back("cubic");
+    }
 }
 
 void 
@@ -141,6 +155,10 @@ PassthroughAll::parameterUpdate(long id){
     
     if (id == 3) {
         getParameterValue(3, _interpolate);
+    }
+    
+    if (id==4) {
+        getParameterValue(4, _interpolateType);
     }
 }
 
@@ -174,26 +192,47 @@ PassthroughAll::process(Sample** sampleIn, Sample** sampleOut, MIDIEvents* midiI
 		sampleFrames = _dspInfo.bufferSize;
 		while(--sampleFrames >= 0) {
         
-            if (_interpolate == 1) { // linear
-                float _currentSample = 0;
-                float y0, y1;
-    
-                y0 = _af.channels[0][(int)_dumbAFCounter];
-                if (_currentSample < _af.numSamples-2) {
-                    y1 = _af.channels[0][(int)_dumbAFCounter + 1];
-                } else {
-                    y1 = _af.channels[0][(int)_dumbAFCounter];
+            if (_interpolate == 1) {
+                
+                switch (_interpolateType) {
+                    case 0:  {
+                        float _currentSample = 0;
+                        float y0, y1;
+            
+                        y0 = _af.channels[0][(int)_dumbAFCounter];
+                        if (_currentSample < _af.numSamples-2) {
+                            y1 = _af.channels[0][(int)_dumbAFCounter + 1];
+                        } else {
+                            y1 = _af.channels[0][(int)_dumbAFCounter];
+                        }
+                        
+                        // mumbojumbo stuff here to switch type
+                        _currentSample = linearInterpolate(y0, y1, _dumbAFCounter);
+
+                        _dumbAFCounter += _counterRate;
+            
+                        if(_dumbAFCounter >= _af.numSamples) _dumbAFCounter = 0;
+                        if( _dumbAFCounter < 0) _dumbAFCounter = _af.numSamples-1;
+            
+                        (*s2++) = _currentSample;
+                        
+                        break;
+                    }
+                    case 1 : {
+                        // cubic here
+                        
+                        _dumbAFCounter += _counterRate;
+
+                        if(_dumbAFCounter >= _af.numSamples) _dumbAFCounter = 0;
+                        if( _dumbAFCounter < 0) _dumbAFCounter = _af.numSamples-1;
+                                        
+                        (*s2++) = _af.channels[0][int(_dumbAFCounter)];
+                        
+                        break;
+                    }
                 }
                 
-                // mumbojumbo stuff here to switch type
-                _currentSample = linearInterpolate(y0, y1, _dumbAFCounter);
-
-                _dumbAFCounter += _counterRate;
-    
-                if(_dumbAFCounter >= _af.numSamples) _dumbAFCounter = 0;
-                if( _dumbAFCounter < 0) _dumbAFCounter = _af.numSamples-1;
-    
-                (*s2++) = _currentSample;
+                
                 
             } else {
                   

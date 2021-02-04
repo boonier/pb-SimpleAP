@@ -34,9 +34,10 @@ namespace acme {
 			double _dParamValue;
 			AudioFile _af;
 			bool _afConnected;
-			double _dumbAFCounter;
+			float _dumbAFCounter;
             double _counterRate;
             int _interpolate;
+            int _interpolateType;
     };
 };
 
