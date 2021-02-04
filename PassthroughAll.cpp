@@ -1,6 +1,7 @@
 
 #include "PassthroughAll.h"
 #include <math.h>
+#include "Interpolation.h"
 
 using namespace plogue::biduleSDK;
 using namespace acme;
@@ -173,7 +174,7 @@ PassthroughAll::process(Sample** sampleIn, Sample** sampleOut, MIDIEvents* midiI
 		sampleFrames = _dspInfo.bufferSize;
 		while(--sampleFrames >= 0) {
         
-            if (_interpolate == 1) {
+            if (_interpolate == 1) { // linear
                 float _currentSample = 0;
                 float y0, y1;
     
@@ -183,7 +184,8 @@ PassthroughAll::process(Sample** sampleIn, Sample** sampleOut, MIDIEvents* midiI
                 } else {
                     y1 = _af.channels[0][(int)_dumbAFCounter];
                 }
-    
+                
+                // mumbojumbo stuff here to switch type
                 _currentSample = linearInterpolate(y0, y1, _dumbAFCounter);
 
                 _dumbAFCounter += _counterRate;

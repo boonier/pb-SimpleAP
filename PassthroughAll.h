@@ -4,6 +4,7 @@
 #include <string>
 #include "../common/BiduleSDK.h"
 
+
 namespace acme {
     using namespace plogue::biduleSDK;
     class PassthroughAll: public BidulePlugin {
@@ -40,12 +41,5 @@ namespace acme {
 };
 
 
-inline float linearInterpolate(float y0, float y1, double currentX) {
-    float interpolatedValue;
-    float scaleValue = currentX - (int)currentX;
-    
-    interpolatedValue = (y0 * (1 - scaleValue)) + (y1 * scaleValue);
-    return interpolatedValue;
-};
 
 #endif
